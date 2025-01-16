@@ -1,0 +1,395 @@
+---
+title: "Tarea Breve - Teoría de muestreo"
+author: "Grupo 6: Fernando Mendoza [20105246]
+Luis Egusquiza [20193469]
+Pamela Salazar [20181281]
+Julian Zavala [F1032805]"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggplot2)
+library(FactoMineR)
+library(factoextra)
+```
+## Parte I: Fundamentos del Muestreo
+
+**1. Asociación entre características y enfoques (2 puntos):**  
+Relacione cada una de las siguientes características con el enfoque correspondiente (Diseño Muestral o Modelo Estadístico):
+
+- **Asume que la población está completamente definida y conocida.**  
+  Respuesta: Diseño Muestral
+
+- **Los datos muestrales se modelan bajo supuestos específicos.**  
+  Respuesta: Modelo Estadístico
+
+- **Depende únicamente del método de selección de las unidades.**  
+  Respuesta: Diseño Muestral
+
+- **Introduce supuestos probabilísticos sobre la variable de interés.**  
+  Respuesta: Modelo Estadístico
+
+
+**2. Evaluación de afirmaciones (2 puntos):**  
+Indique si las siguientes afirmaciones son verdaderas o falsas. Justifique su respuesta en no más de 50 palabras:
+
+- **En un MAS, al duplicar el tamaño de la muestra, la varianza de la media muestral se reduce a la mitad.**  
+  Respuesta: Verdadero. En un MAS, la varianza de la media muestral es inversamente proporcional al tamaño de la muestra. Entonces, si se duplica el tamaño de la muestra (n), la varianza se reduciría a la mitad.  
+
+
+- **En un MAE, el uso de pesos mal especificados puede sesgar la estimación de la media poblacional.**  
+  Respuesta: Verdadero. En un MAE, los pesos correctos reflejan la proporción de cada estrato en la población. De ese modo, los pesos mal especificados causarán que las unidades de ciertos estratos estén sobrerrepresentadas o subrepresentadas en las estimaciones. En consecuencia, habrá un sesgo en la estimación, pues los pesos no reflejan las proporciones reales de la población.
+
+- **En un MAE, estratos de tamaño desigual siempre conducen a estimadores menos eficientes.**  
+  Respuesta: Falso. La eficiencia en un MAE no depende únicamente del tamaño desigual de los estratos, sino de cómo se distribuye la variabilidad dentro de ellos. Entonces, si los estratos están bien diseñados, los estimadores pueden ser más eficientes, incluso si los tamaños son desiguales.
+
+- **El efecto de diseño (DEFF) solo depende del tamaño muestral, independientemente del diseño muestral empleado.**  
+  Respuesta: Falso. El efecto de diseño (DEFF) no depende exclusivamente del tamaño de la muestra (véase la fórmula), dado que los diseños complejos como los estratificados y conglomerados introducen características que alteran la varianza, como la correlación intraclase y los pesos de las unidades.
+
+
+**3.  Preguntas abiertas (6 puntos): Responda brevemente (máximo 80 palabras por respuesta):** 
+
+**¿Cuál es la diferencia clave entre un diseño probabilístico y uno no probabilístico?**
+
+- Respuesta: La principal diferencia entre un diseño de muestreo probabilístico y uno no probabilístico radica en la selección de los elementos de la muestra. En el muestreo probabilístico, cada elemento de la población tiene una probabilidad conocida y no nula de ser seleccionado,  lo que permite hacer inferencias estadísticas sobre toda la población. Esto garantiza una mayor representatividad de la muestra. Por otro lado, en el muestreo no probabilístico, la selección es subjetiva y no aleatoria, lo que limita la generalización de los resultados a toda la población.
+  
+**¿Qué es un marco muestral y qué implicaciones tiene su incorrecta definición?**
+
+- Respuesta: Un marco muestral es un listado completo de todos los elementos de la población a partir del cual se seleccionará la muestra. Si este marco es incorrecto o incompleto, la muestra no será representativa de la población, lo que conducirá a estimaciones sesgadas y poco precisas.
+
+**Explique cómo el muestreo por conglomerados puede reducir los costos pero aumentar la varianza.**
+
+- Respuesta: El muestreo por conglomerados divide la población en grupos naturales (conglomerados) y luego selecciona aleatoriamente algunos de estos conglomerados. Esto reduce costos al agrupar elementos geográficamente o por otras características. Sin embargo, al ser más homogéneos dentro de cada conglomerado, puede aumentar la varianza entre conglomerados, disminuyendo la precisión de las estimaciones.
+
+**¿Por qué el muestreo estratificado puede mejorar la precisión de las estimaciones en comparación con el MAS?**
+
+- Respuesta: El muestreo estratificado divide la población en subgrupos (estratos) homogéneos con respecto a la variable de interés. Al seleccionar aleatoriamente dentro de cada estrato, se garantiza una representación adecuada de cada subgrupo, lo que reduce la varianza y mejora la precisión de las estimaciones en comparación con un muestreo aleatorio simple (MAS), donde todos los elementos tienen la misma probabilidad de ser seleccionados.
+
+## Parte II: Ejercicio de juguete
+
+### **1. Simulación de un muestreo aleatorio simple (MAS)** (1 punto):
+ 
+- Genere un conjunto de datos ficticio con las siguientes características:
+
+  - Tamaño de población: 10,000 individuos.
+
+  - Establezca una semilla con el número 12345.
+
+  - Variables:
+    - `ingresos`: distribución normal con media 2,000 y desviación estándar 500 
+    - `edad`: uniforme entre 18 y 65 años
+    - `estrato`: tres estratos aleatorios con proporciones: 30%, 50%, 20%
+    - `sexo`: variable categórica con valores “Hombre” y “Mujer”
+    
+```{r}
+# Establecer semilla
+set.seed(12345)
+
+# Tamaño de la población
+n <- 10000
+
+# Generar variables
+ingresos <- rnorm(n, mean = 2000, sd = 500) # Distribución normal
+edad <- sample(18:65, n, replace = TRUE)    # Uniforme entre 18 y 65 años
+
+# Estratos (proporciones: 30%, 50%, 20%)
+estrato <- sample(c("Estrato 1", "Estrato 2", "Estrato 3"), 
+                  n, 
+                  replace = TRUE, 
+                  prob = c(0.3, 0.5, 0.2))
+
+# Sexo (Hombre/Mujer)
+sexo <- sample(c("Hombre", "Mujer"), 
+               n, 
+               replace = TRUE, 
+               prob = c(0.5, 0.5))
+
+# Combinar las variables en un data frame
+df <- data.frame(ingresos = ingresos,
+                         edad = edad, 
+                         estrato = estrato,
+                         sexo = sexo)
+
+# Vista preliminar de la base de datos
+head(df)
+
+```
+
+- Extrae una muestra del 5% de la población utilizando un MAS
+
+```{r}
+
+library(dplyr)
+muestra_MAS <- df %>% 
+  slice_sample(n = ceiling(0.05 * nrow(df)
+                           )
+               )
+
+summary(muestra_MAS)
+```
+
+- Calcule la media y el error estándar de las variables `ingresos` y `edad`.
+
+```{r}
+resultados_MAS <- muestra_MAS %>%
+  summarize(
+    media_ingresos_MAS = mean(ingresos),
+    se_ingresos_MAS = sd(ingresos) / sqrt(n()),
+    media_edad_MAS = mean(edad),
+    se_edad_MAS = sd(edad) / sqrt(n())
+  )
+
+print(resultados_MAS)
+```
+
+### **2. Muestreo estratificado (MAE)** (2 puntos):
+
+- Extrae una muestra estratificada del 5% de la población, asegurando que la proporción de cada estrato en la muestra sea la misma que en la
+población.
+
+```{r}
+tamano_muestra <- ceiling(0.05 * nrow(df))
+
+muestra_MAE <- df %>%
+  group_by(estrato) %>%
+  slice_sample(prop = 0.05) %>%
+  ungroup()
+
+proporciones_poblacion <- df %>% count(estrato) %>% mutate(proporcion = n / sum(n))
+proporciones_muestra <- muestra_MAE %>% count(estrato) %>% mutate(proporcion = n / sum(n))
+
+cat("Proporciones en la población:\n")
+print(proporciones_poblacion)
+
+cat("\nProporciones en la muestra:\n")
+print(proporciones_muestra)
+
+```
+
+- Compare la media y el error estándar de los `ingresos` obtenidos en el
+MAS y el MAE. Explique las diferencias.
+
+```{r}
+resultados_MAS <- muestra_MAS %>%
+  summarize(
+    media_ingresos_MAS = mean(ingresos),
+    se_ingresos_MAS = sd(ingresos) / sqrt(n())
+  )
+
+resultados_MAE <- muestra_MAE %>%
+  summarize(
+    media_ingresos_MAE = mean(ingresos),
+    se_ingresos_MAE = sd(ingresos) / sqrt(n())
+  )
+
+resultados_comparacion <- tibble(
+  Metodo = c("MAS", "MAE"),
+  Media_Ingresos = c(resultados_MAS$media_ingresos_MAS, resultados_MAE$media_ingresos_MAE),
+  SE_Ingresos = c(resultados_MAS$se_ingresos_MAS, resultados_MAE$se_ingresos_MAE)
+)
+
+print(resultados_comparacion)
+
+```
+Se ve que la media de los ingresos en la muestra MAS es diferente a la de MAE. Esa media es simplemente una estimación de la media de la población, sin tener en cuenta las diferencias entre estratos. Mientras que la media en la muestra MAE puede estar más alineada con la población, ya que se toma proporcionalmente según los estratos.
+
+El error estándar (SE) en MAE puede ser diferente al de MAS. La razón es que el error estándar depende de la variabilidad dentro de cada estrato y del tamaño de la muestra estratificada. En una muestra estratificada, los errores estándar pueden ser menores si la variabilidad dentro de los estratos es más baja, ya que cada estrato es más homogéneo que la población total.
+
+- Explique cómo el diseño muestral afecta la precisión y el costo de las
+estimaciones.
+
+Los diseños muestrales estratificados generalmente mejoran la precisión de las estimaciones al reducir la variabilidad dentro de los estratos y garantiza una mejor representación dentro de los subgrupos. Esto es especialmente importante si vemos que la población es heterogénea.
+
+Aunque la MAE tiene un costo inicial más alto debido a la planificación y clasificación de estratos, este puede reducir los costos a largo plazo debido a la menor necesidad de una muestra grande para lograr la misma precisión que una MAS. La MAS, aunque más económica en términos de implementación, puede requerir muestras más grandes, lo que eleva los costos totales.
+
+### **3. Exceso de estratos** (2 puntos):
+
+- Genere la variable `grupo_edad` considerando los siguientes umbrales:
+30, 40, 50. En total, la variable incluirá cuatro categorías.
+```{r}
+df_2 <- df %>%
+  mutate(grupo_edad = case_when(edad <= 30 ~ "18-30",
+      edad > 30 & edad <= 40 ~ "31-40",
+      edad > 40 & edad <= 50 ~ "41-50",
+      edad > 50 ~ "51+"
+    )
+  )
+
+head(df_2$grupo_edad)
+```
+
+- Considere que los estratos se construirán a partir de las variables `estrato`, `sexo` y `grupo_edad`. Si lo prefiere, puede crear una nueva variable que resuma todos los estratos extendidos, pero no es necesario.
+```{r}
+df_2 <- df_2 %>%
+  mutate(
+    estrato_extendido = paste(estrato, sexo, grupo_edad, sep = "_")
+  )
+
+head(df_2$estrato_extendido)
+```
+
+- Calcule el número de observaciones en cada estrato extendido y reporte si hay estratos con menos de 30 observaciones.
+```{r}
+conteo_estratos <- df_2 %>%
+  group_by(estrato_extendido) %>%
+  summarize(num_observaciones = n()) %>%
+  arrange(desc(num_observaciones))
+
+print(conteo_estratos)
+
+estratos_bajo_30 <- conteo_estratos %>%
+  filter(num_observaciones < 30)
+
+if (nrow(estratos_bajo_30) > 0) {
+  print(estratos_bajo_30)
+} else {
+  print("No hay estratos con menos de 30 observaciones.")
+}
+
+```
+
+- Extrae una muestra estratificada del 5% basada en los nuevos estratos.
+```{r}
+muestra_df_2 <- df_2 %>%
+  group_by(estrato_extendido) %>%
+  slice_sample(prop = 0.05) %>%
+  ungroup()  
+
+summary(muestra_df_2)
+
+```
+
+- Compare la media y el SE de los `ingresos` obtenidos con MAS y MAE.
+```{r}
+resultados_df_2 <- muestra_df_2 %>%
+  summarize(
+    media_ingresos_df_2 = mean(ingresos),
+    se_ingresos_df_2 = sd(ingresos) / sqrt(n())
+  )
+
+resultados_comparacion_2 <- tibble(
+  Metodo = c("MAS", "MAE", "Estratificada_df_2"),
+  Media_Ingresos = c(resultados_MAS$media_ingresos_MAS, resultados_MAE$media_ingresos_MAE, resultados_df_2$media_ingresos_df_2),
+  SE_Ingresos = c(resultados_MAS$se_ingresos_MAS, resultados_MAE$se_ingresos_MAE, resultados_df_2$se_ingresos_df_2)
+)
+
+print(resultados_comparacion_2)
+```
+
+- Explique cómo un exceso de estratos puede afectar el diseño muestral, la precisión de las estimaciones y la viabilidad del muestreo.
+
+Un exceso de estratos puede mejorar la precisión en algunos casos al permitir estimaciones más detalladas dentro de grupos homogéneos. Sin embargo, introduce desafíos como un aumento en los costos, complejidad en la logística y análisis, y una posible pérdida de eficiencia en el diseño muestral. En la práctica, el número de estratos debe ser suficiente para capturar la variabilidad relevante en la población sin que el diseño se vuelva innecesariamente complejo ni costoso. Es fundamental encontrar un balance entre la precisión deseada y los recursos disponibles.
+
+
+## Parte II: Ejercicio Aplicado
+
+Utilice la base de datos del CENAGRO, que está disponible en Canvas.
+```{r}
+# Limpieza de memoria
+rm(list = ls())
+options(digits=4)
+
+# Ruta global del archivo de datos
+input <- "C:/Users/mendo/OneDrive/Desktop/GitHub/10-Big_Data_et_Analytics/PC_1/Cenagro2012_short.dta"
+
+library(dplyr)
+library(ggplot2)
+library(haven)
+library(survey)
+
+data_1 <- read_dta(input)
+```
+
+**1. Preparación (1 punto):**
+
+- Establece una semilla con el número 12345
+```{r}
+set.seed(12345)
+
+```
+
+
+- Genere las siguientes variables:
+  
+  - `rango_edad`: variable categórica que identifica los siguientes grupos
+etarios: de 12 a 24 inclusive, de 25 a 64 inclusive, de 65 a más.
+  
+  - `mujer`: variable dicotómica que identifique a las Unidades
+Agropecuarias (UAs) que son dirigidas por mujeres
+
+```{r}
+data_1 <- data_1 |>
+  mutate(
+    mujer = ifelse(sexo == 0, 1, 0),
+    rango_edad = cut(edad, 
+                     breaks = c(12, 24, 64, Inf), 
+                     labels = c("A", "B", "C"), 
+                     right = TRUE),
+  )
+```
+
+**2. Aplicando un MAS (2 puntos):**
+- Extrae una MAS de 11,234 observaciones de la población total (base
+completa).
+```{r}
+mas_1 <- data_1[sample(1:nrow(data_1), size = 11234),]
+
+```
+
+- Calcule el intervalo de confianza de la variable `sup_total`.
+```{r}
+confianza <- 0.95
+n <- nrow(mas_1)
+media <- mean(mas_1$sup_total)
+desviacion <- sd(mas_1$sup_total)
+t_critico <- qt(1 - (1 - confianza) / 2, df = n - 1)
+margen_error <- t_critico * (desviacion / sqrt(n))
+limite_inferior <- media - margen_error
+limite_superior <- media + margen_error
+cat("Intervalo de confianza del 95% para la media de 'sup_total': [", limite_inferior, ",", limite_superior, "]\n")
+
+```
+
+- Estime el factor de expansión de cada observación. ¿A qué corresponde la
+sumatoria de esta variable? ¿Por qué?
+```{r}
+N <- nrow(data_1)  # Número total de observaciones
+n <- nrow(mas_1)  # Número de observaciones en mas_1
+factor_expansion <- N / n
+cat("El factor de expansión es:", factor_expansion, "\n")
+mas_1$factor_expansion <- factor_expansion
+head(mas_1)
+```
+Cada observación en la muestra está representando a un número de observaciones de la población (es decir, cada observación en la muestra "expande" su representación de la población total por un factor). Al sumar todos los factores de expansión de la muestra, estaríamos sumando las "unidades" u "observaciones" representadas por esas unidades de la muestra, lo que nos da el total de la población.
+
+**3. Mejorando eficiencia con MAE (2 puntos):**
+
+- Extraer una MAE de 11,234 observaciones utilizando la variable
+`rango_edad` como estrato.
+```{r}
+data_1 %>%
+  count(rango_edad)
+data_1_clean <- data_1[!is.na(data_1$rango_edad), ]
+
+mae_1 <- data_1_clean %>% slice_sample(n = 11234, by = rango_edad)
+
+mae_2 <- data_1_clean %>% group_by(rango_edad) %>% slice_sample(n = 11234)
+
+# Define un diseño muestral estratificado (rango_edad)
+dme_1 <- svydesign(id = ~1, data = mae_1, strata = ~rango_edad)
+
+```
+
+- Declare el diseño muestral y obtenga el promedio de la variable `mujer`
+para toda la muestra utilizando el diseño muestral.
+```{r}
+# Promedio de variable mujer
+promedio_mujer <- svymean(~mujer, dme_1)
+promedio_mujer
+
+```
+

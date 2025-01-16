@@ -1,0 +1,87 @@
+---
+title: "**Trabajo 1 - Teoría de Muestreo**"
+author: "Grupo 6: <br> - Fernando Mendoza [20105246] <br> - Luis Egusquiza [20193469] <br> - Pamela Salazar [20181281]  <br> - Julian Zavala [F1032805]"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## **Parte I (5 puntos)**
+
+Responda en máximo 80 palabras **dos** de las siguientes preguntas
+
+1. Explique en sus propias palabras las diferencias entre dominio y estrato. Utilice ejemplos no discutidos durante las clases teóricas.
+
+Si estamos analizando los datos de una encuesta de satisfacción del cliente sobre una página web o tienda online, el dominio corresponde a comercio electrónico en atención al área de aplicación y/o tipo de datos a tratar. Por otra parte, el estrato podría comprender a los clientes con compras mayores de una cantidad X, es decir se trataría de una subcategoría dentro de los datos del dominio.
+En síntesis, el dominio es el campo específico de interés, mientras el estrato comprende una partición o grupo con características similares.
+
+
+2. ¿Qué esperaría que ocurra con la varianza de una variable cuando se aplique un muestreo aleatorio clusterizado (MAC) en lugar de un muestreo aleatorio estratificado (MAE)? ¿Por qué?
+
+Primero, en el MAE, la población de la muestra se divide en grupos homogéneos llamados "estratos".
+Luego, en el MAC, los clusters suelen ser heterogéneos y las observaciones en un mismo cluster suelen ser similares entre sí, por lo cual, aumenta la varianza.
+
+3. Explique, con sus propias palabras, por qué se espera que el efecto diseño (*𝑑𝑒𝑓𝑓*) en un MAE sea menor o igual que 1.
+
+Primero, el efecto diseño está dado por la relación entre la varianza de la estimación bajo el diseño complejo y la varianza bajo el muestreo aleatorio simple. Además, se infiere que el MAE presenta grupos homogéneos la variabilidad se reduce y las estimaciones tienden a ser más precisas, por cuanto la varianza tiende a reducirse. En otros términos, se presume que la MAE es más eficiente que el muestreo aleatorio simple.
+
+4. ¿En qué caso el muestreo aleatorio por conglomerados tiende a aumentar la precisión de las estimaciones?
+
+Se tendrán que presentar dos condiciones, que los conglomerados sean muy heterogéneos entre sí y que los elementos de los conglomerados sean relativamente homogéneos. Puesto que si seleccionamos un número de conglomerados representativos de una muestra, y la diferencia entre estos, es probable que las estimaciones sean muy precisas.
+
+## **Parte II (5 puntos)**
+
+1. Descargue el Censo Nacional de Población Penitenciaria 2016 de la página del INEI (https://proyectos.inei.gob.pe/microdatos/). Puede descargar solo la carátula o también más módulos de dicho censo.
+
+2. Genere una variable dicotómica con el valor de 1 para quienes cometen “Delitos contra la seguridad pública”, y 0 para el resto de casos. Llamar a esta variable `pp_dcsp`
+
+3. Establezca una semilla (“seed”) usando los dígitos 12345.
+
+4. Extraiga una muestra estratificada y por conglomerados que contenga entre el 3% y 5% de la población (toda la base). Justifique la elección de las variables para los estratos y conglomerados. Discuta también, de ser el caso, qué otras variables que podrían haberse utilizado para los estratos o conglomerados.
+
+5. Declare el diseño muestral completo y calcalue las siguientes estadísticas (deben ser representativas):
+
+  a. El porcentaje de personas que cometió “Delitos contra la seguridad pública”
+
+  b. El total de personas que cometió “Delitos contra la seguridad pública”
+  
+## **Parte III (5 puntos)**
+
+Explique el objetivo, la población objetivo, macro muestral, el diseño muestral de la encuesta y las unidades de muestreo. Luego, declare el diseño muestral (**completo**). Explique los niveles de inferencia, construcción de pesos y tasa de no respuesta. Para esto, se recomienda revisar la ficha técnica de la encuesta.
+
+## **Parte IV (5 puntos)**
+
+Responder uno de los siguientes bloques de preguntas (elija entre Bloque A o Bloque B). Prestar atención al límite de palabras de cada pregunta.
+
+## **BLOQUE A**
+
+Pregunta 1 (Palabras: 200)
+
+Suponga que usted trabaja en el Área de Estudios del Ministerio de Educación. En su área quieren medir el nivel de bienestar psicológico en estudiantes de educación secundaria en Lima. Para ello, el psicólogo especialista sugiere utilizar como instrumento la Escala de Bienestar Psicológico de Ryff. A usted le piden encargarse del diseño muestral de la encuesta a levantar. Explique cuál sería el marco muestral que usaría y por qué. Comente la calidad del marco muestral elegido (incluya los conceptos de población objetivo, población encuestada). Además, explique cuál sería el diseño muestral que usted sugeriría para la encuesta y por qué. Comente, de manera breve, las ventajas y desventajas del diseño elegido frente a los otros. Finalmente, de manera sencilla e intuitiva, comente el tamaño de muestra que elegiría (n) y a qué factores responde el tamaño propuesto.
+
+Pregunta 2 (Palabras: 300)
+
+En el Ministerio de Desarrollo e Inclusión Social (Midis), le han encargado a Ud. como muestrista principal diseñar una encuesta probabilística para medir la prevalencia de vulnerabilidad a la pobreza (variable dicotómica) en todas los departamentos del Perú.
+
+Su supervisor, quien es un muy buen *policymaker* pero sin ninguna formación cuantitativa ni de muestreo, se enteró del libro de Dillman (2014) y de las tablas de cálculo de tamaño de muestra. Él está solicitándole que justifique sus decisiones metodológicas pues argumenta que “como máximo se necesitaría una muestra de tamaño 𝑛 = 1067 como se observa en la figura 3.5 de libro”.
+
+Ud. ha planteado que se levante un muestreo complejo (estratificado y biétapico) para lograr el objetivo. Explique en **castellano sencillo y de forma intuitiva** por qué necesitaría (o no) una muestra de mayor tamaño. Incluya en su respuesta el concepto de tamaño de muestra efectivo, correlación intracluster y efecto de diseño. Recuerde que su supervisor no maneja estos temas.
+
+## **BLOQUE B**
+
+Pregunta 1 (Palabras: 300)
+
+Suponga que usted es ascendido como muestrista principal en el Ministerio de Salud (Minsa). Su primera tarea es terminar de definir el diseño de una encuesta probabilística para medir el nivel de desnutrición en niños de educación primaria. El anterior muestrista había sugerido un diseño por conglomerados donde los conglomerados sean los distritos.
+Discuta si esta opción le parece la más idónea. ¿Qué beneficios y/o perjuicios traería hacerlo de dicho modo? Además, si usted considera que hay otra opción, explique cuál sería y por qué. Incluya los conceptos de UPM y USC.
+Suponga, además, que su superior le dice que han aumentado el presupuesto para el estudio, por lo cual pueden incrementar el tamaño de muestra calculado por el anterior muestrista. En ese sentido, le consulta si resulta más conveniente aumentar los conglomerados o más bien el número de estudiantes dentro de cada conglomerado.
+Argumente su respuesta.
+
+Discuta las ventajas y/o desventajas del diseño planteado por al anterior muestrista (diseño por conglomerados) frente a un diseño por estratos. De optar por un diseño por estratos, cuáles serían las ventajas y desventajas frente al diseño inicialmente planteado. Incluya conceptos como homogeneidad, heterogeneidad, efecto de diseño.
+
+Pregunta 2 (Palabras: 200)
+
+Un hacedor de políticas públicas que cuenta con conocimientos intermedios de estadística le pide que utilice la Encuesta Nacional Agropecuaria más reciente para obtener estadísticas distritales de acceso a asistencia técnica en agricultores de Cajamarca. Estos datos serán utilizados en el diseño de un programa público de apoyo a los productores.
+Explíquele al funcionario si esto es posible y por qué. En caso no sea posible, propóngale qué otra fuente de datos podría usarse y cuáles serían sus ventajas y desventajas.
