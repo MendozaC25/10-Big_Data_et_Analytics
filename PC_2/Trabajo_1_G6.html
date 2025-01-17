@@ -410,22 +410,96 @@ estos, es probable que las estimaciones sean muy precisas.</p>
 <div id="parte-ii-5-puntos" class="section level2">
 <h2><strong>Parte II (5 puntos)</strong></h2>
 <ol style="list-style-type: decimal">
-<li><p>Descargue el Censo Nacional de Población Penitenciaria 2016 de la
+<li>Descargue el Censo Nacional de Población Penitenciaria 2016 de la
 página del INEI (<a href="https://proyectos.inei.gob.pe/microdatos/" class="uri">https://proyectos.inei.gob.pe/microdatos/</a>). Puede
-descargar solo la carátula o también más módulos de dicho
-censo.</p></li>
-<li><p>Genere una variable dicotómica con el valor de 1 para quienes
+descargar solo la carátula o también más módulos de dicho censo.</li>
+</ol>
+<pre class="r"><code>library(dplyr)</code></pre>
+<pre><code>## 
+## Adjuntando el paquete: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>library(haven)
+library(survey)</code></pre>
+<pre><code>## Cargando paquete requerido: grid</code></pre>
+<pre><code>## Cargando paquete requerido: Matrix</code></pre>
+<pre><code>## Cargando paquete requerido: survival</code></pre>
+<pre><code>## 
+## Adjuntando el paquete: &#39;survey&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:graphics&#39;:
+## 
+##     dotchart</code></pre>
+<pre class="r"><code>library(archive)
+
+setwd(&quot;C:/Users/mendo/OneDrive/Desktop/GitHub/10-Big_Data_et_Analytics/PC_2&quot;)
+
+# URL del archivo en Github
+url_1 &lt;- &quot;https://github.com/MendozaC25/10-Big_Data_et_Analytics/raw/refs/heads/main/PC_2/01_PENALES_CARATULA.rar&quot;
+url_2 &lt;- &quot;https://github.com/MendozaC25/10-Big_Data_et_Analytics/raw/refs/heads/main/PC_2/01_PENALES_CAP100.rar&quot;
+
+# Nombre del archivo de destino
+destfile_1 &lt;- &quot;01_PENALES_CARATULA.rar&quot;
+destfile_2 &lt;- &quot;01_PENALES_CAP100.rar&quot;
+
+# Descargar el archivo
+download.file(url_1, destfile_1, mode = &quot;wb&quot;)
+download.file(url_2, destfile_2, mode = &quot;wb&quot;)
+
+# Extraer archivos
+archive_extract(&quot;01_PENALES_CARATULA.rar&quot;)
+archive_extract(&quot;01_PENALES_CAP100.rar&quot;)
+
+data_1 &lt;- read_sav(&quot;01_PENALES_CARATULA.sav&quot;)
+data_2 &lt;- read_sav(&quot;01_PENALES_CAP100.sav&quot;)
+
+file.remove(&quot;01_PENALES_CARATULA.sav&quot;)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>file.remove(&quot;01_PENALES_CAP100.sav&quot;)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>n_registros &lt;- nrow(data_1)</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Genere una variable dicotómica con el valor de 1 para quienes
 cometen “Delitos contra la seguridad pública”, y 0 para el resto de
-casos. Llamar a esta variable <code>pp_dcsp</code></p></li>
-<li><p>Establezca una semilla (“seed”) usando los dígitos
-12345.</p></li>
-<li><p>Extraiga una muestra estratificada y por conglomerados que
-contenga entre el 3% y 5% de la población (toda la base). Justifique la
-elección de las variables para los estratos y conglomerados. Discuta
-también, de ser el caso, qué otras variables que podrían haberse
-utilizado para los estratos o conglomerados.</p></li>
-<li><p>Declare el diseño muestral completo y calcalue las siguientes
-estadísticas (deben ser representativas):</p></li>
+casos. Llamar a esta variable <code>pp_dcsp</code></li>
+</ol>
+<pre class="r"><code>data_1_0 &lt;- data_1 |&gt;
+  mutate(
+    pp_dcsp = ifelse(DELITO_GENERICO == &quot;DELITOS CONTRA LA SEGURIDAD PUBLICA&quot;, 1, 0)
+  )</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>Establezca una semilla (“seed”) usando los dígitos 12345.</li>
+</ol>
+<pre class="r"><code>set.seed(12345)</code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li>Extraiga una muestra estratificada y por conglomerados que contenga
+entre el 3% y 5% de la población (toda la base). Justifique la elección
+de las variables para los estratos y conglomerados. Discuta también, de
+ser el caso, qué otras variables que podrían haberse utilizado para los
+estratos o conglomerados.</li>
+</ol>
+<pre class="r"><code># 1 variable a usar para estratos edades, en atención a la población penitenciaria
+# data_1_e es una variable que se 
+data_1_0$data_1_e &lt;- cut(data_1_0$EDAD, breaks = c(0, 30, 45, 60, Inf), 
+                          labels = c(&quot;18-30&quot;, &quot;31-45&quot;, &quot;46-60&quot;, &quot;60+&quot;), 
+                          right = FALSE)
+
+# Conglomerados
+
+base_clusters &lt;- data_1_0 %&gt;%
+  count(OF_REGIONAL)
+
+# Muestra aleatoria de conglomerados
+mac_1_clusters &lt;- base_clusters %&gt;%
+  slice_sample(prop = 0.03)
+
+mac_1_final &lt;- merge(x = data_1_0 , y = mac_1_clusters , by = c(&quot;OF_REGIONAL&quot;))</code></pre>
+<ol start="5" style="list-style-type: decimal">
+<li>Declare el diseño muestral completo y calcalue las siguientes
+estadísticas (deben ser representativas):</li>
 </ol>
 <ol style="list-style-type: lower-alpha">
 <li><p>El porcentaje de personas que cometió “Delitos contra la
@@ -447,9 +521,8 @@ Para esto, se recomienda revisar la ficha técnica de la encuesta.</p>
 <p>Responder uno de los siguientes bloques de preguntas (elija entre
 Bloque A o Bloque B). Prestar atención al límite de palabras de cada
 pregunta.</p>
-</div>
-<div id="bloque-a" class="section level2">
-<h2><strong>BLOQUE A</strong></h2>
+<div id="bloque-a" class="section level3">
+<h3><strong>BLOQUE A</strong></h3>
 <p>Pregunta 1 (Palabras: 200)</p>
 <p>Suponga que usted trabaja en el Área de Estudios del Ministerio de
 Educación. En su área quieren medir el nivel de bienestar psicológico en
@@ -482,8 +555,8 @@ muestra de mayor tamaño. Incluya en su respuesta el concepto de tamaño
 de muestra efectivo, correlación intracluster y efecto de diseño.
 Recuerde que su supervisor no maneja estos temas.</p>
 </div>
-<div id="bloque-b" class="section level2">
-<h2><strong>BLOQUE B</strong></h2>
+<div id="bloque-b" class="section level3">
+<h3><strong>BLOQUE B</strong></h3>
 <p>Pregunta 1 (Palabras: 300)</p>
 <p>Suponga que usted es ascendido como muestrista principal en el
 Ministerio de Salud (Minsa). Su primera tarea es terminar de definir el
@@ -513,6 +586,7 @@ serán utilizados en el diseño de un programa público de apoyo a los
 productores. Explíquele al funcionario si esto es posible y por qué. En
 caso no sea posible, propóngale qué otra fuente de datos podría usarse y
 cuáles serían sus ventajas y desventajas.</p>
+</div>
 </div>
 
 

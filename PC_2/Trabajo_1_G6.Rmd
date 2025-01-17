@@ -36,17 +36,96 @@ Se tendrán que presentar dos condiciones, que los conglomerados sean muy hetero
 
 1. Descargue el Censo Nacional de Población Penitenciaria 2016 de la página del INEI (https://proyectos.inei.gob.pe/microdatos/). Puede descargar solo la carátula o también más módulos de dicho censo.
 
+```{r}
+library(dplyr)
+library(haven)
+library(survey)
+library(archive)
+
+setwd("C:/Users/mendo/OneDrive/Desktop/GitHub/10-Big_Data_et_Analytics/PC_2")
+
+# URL del archivo en Github
+url_1 <- "https://github.com/MendozaC25/10-Big_Data_et_Analytics/raw/refs/heads/main/PC_2/01_PENALES_CARATULA.rar"
+url_2 <- "https://github.com/MendozaC25/10-Big_Data_et_Analytics/raw/refs/heads/main/PC_2/01_PENALES_CAP100.rar"
+
+# Nombre del archivo de destino
+destfile_1 <- "01_PENALES_CARATULA.rar"
+destfile_2 <- "01_PENALES_CAP100.rar"
+
+# Descargar el archivo
+download.file(url_1, destfile_1, mode = "wb")
+download.file(url_2, destfile_2, mode = "wb")
+
+# Extraer archivos
+archive_extract("01_PENALES_CARATULA.rar")
+archive_extract("01_PENALES_CAP100.rar")
+
+data_1 <- read_sav("01_PENALES_CARATULA.sav")
+data_2 <- read_sav("01_PENALES_CAP100.sav")
+
+file.remove("01_PENALES_CARATULA.sav")
+file.remove("01_PENALES_CAP100.sav")
+
+n_registros <- nrow(data_1)
+
+```
+
 2. Genere una variable dicotómica con el valor de 1 para quienes cometen “Delitos contra la seguridad pública”, y 0 para el resto de casos. Llamar a esta variable `pp_dcsp`
+
+```{r}
+data_1_0 <- data_1 |>
+  mutate(
+    pp_dcsp = ifelse(DELITO_GENERICO == "DELITOS CONTRA LA SEGURIDAD PUBLICA", 1, 0)
+  )
+
+```
 
 3. Establezca una semilla (“seed”) usando los dígitos 12345.
 
+```{r}
+set.seed(12345)
+
+```
+
 4. Extraiga una muestra estratificada y por conglomerados que contenga entre el 3% y 5% de la población (toda la base). Justifique la elección de las variables para los estratos y conglomerados. Discuta también, de ser el caso, qué otras variables que podrían haberse utilizado para los estratos o conglomerados.
+
+```{r}
+# 1 variable a usar para estratos edades, en atención a la población penitenciaria
+# data_1_e es una variable que se 
+data_1_0$data_1_e <- cut(data_1_0$EDAD, breaks = c(0, 30, 45, 60, Inf), 
+                          labels = c("18-30", "31-45", "46-60", "60+"), 
+                          right = FALSE)
+
+# Conglomerados
+
+base_clusters <- data_1_0 %>%
+  count(OF_REGIONAL)
+
+# Muestra aleatoria de conglomerados
+mac_1_clusters <- base_clusters %>%
+  slice_sample(prop = 0.03)
+
+mac_1_final <- merge(x = data_1_0 , y = mac_1_clusters , by = c("OF_REGIONAL"))
+
+```
 
 5. Declare el diseño muestral completo y calcalue las siguientes estadísticas (deben ser representativas):
 
+```{r}
+
+```
+
   a. El porcentaje de personas que cometió “Delitos contra la seguridad pública”
 
+```{r}
+
+```
+
   b. El total de personas que cometió “Delitos contra la seguridad pública”
+  
+```{r}
+
+```
   
 ## **Parte III (5 puntos)**
 
@@ -56,7 +135,7 @@ Explique el objetivo, la población objetivo, macro muestral, el diseño muestra
 
 Responder uno de los siguientes bloques de preguntas (elija entre Bloque A o Bloque B). Prestar atención al límite de palabras de cada pregunta.
 
-## **BLOQUE A**
+### **BLOQUE A**
 
 Pregunta 1 (Palabras: 200)
 
@@ -70,7 +149,7 @@ Su supervisor, quien es un muy buen *policymaker* pero sin ninguna formación cu
 
 Ud. ha planteado que se levante un muestreo complejo (estratificado y biétapico) para lograr el objetivo. Explique en **castellano sencillo y de forma intuitiva** por qué necesitaría (o no) una muestra de mayor tamaño. Incluya en su respuesta el concepto de tamaño de muestra efectivo, correlación intracluster y efecto de diseño. Recuerde que su supervisor no maneja estos temas.
 
-## **BLOQUE B**
+### **BLOQUE B**
 
 Pregunta 1 (Palabras: 300)
 
