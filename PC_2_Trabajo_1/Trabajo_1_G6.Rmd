@@ -1,0 +1,267 @@
+---
+title: "**Trabajo 1 - Teoría de Muestreo**"
+author: "Grupo 6: <br> - Fernando Mendoza [20105246] <br> - Luis Egusquiza [20193469] <br> - Pamela Salazar [20181281]  <br> - Julian Zavala [F1032805]"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+## **Parte I (5 puntos)**
+
+Responda en máximo 80 palabras **dos** de las siguientes preguntas
+
+1. Explique en sus propias palabras las diferencias entre dominio y estrato. Utilice ejemplos no discutidos durante las clases teóricas.
+
+Si estamos analizando los datos de una encuesta de satisfacción del cliente sobre una página web o tienda online, el dominio corresponde a comercio electrónico en atención al área de aplicación y/o tipo de datos a tratar. Por otra parte, el estrato podría comprender a los clientes con compras mayores de una cantidad X, es decir se trataría de una subcategoría dentro de los datos del dominio.
+En síntesis, el dominio es el campo específico de interés, mientras el estrato comprende una partición o grupo con características similares.
+
+
+2. ¿Qué esperaría que ocurra con la varianza de una variable cuando se aplique un muestreo aleatorio clusterizado (MAC) en lugar de un muestreo aleatorio estratificado (MAE)? ¿Por qué?
+
+Primero, en el MAE, la población de la muestra se divide en grupos homogéneos llamados "estratos".
+Luego, en el MAC, los clusters suelen ser heterogéneos y las observaciones en un mismo cluster suelen ser similares entre sí, por lo cual, aumenta la varianza.
+
+3. Explique, con sus propias palabras, por qué se espera que el efecto diseño (*𝑑𝑒𝑓𝑓*) en un MAE sea menor o igual que 1.
+
+Primero, el efecto diseño está dado por la relación entre la varianza de la estimación bajo el diseño complejo y la varianza bajo el muestreo aleatorio simple. Además, se infiere que el MAE presenta grupos homogéneos la variabilidad se reduce y las estimaciones tienden a ser más precisas, por cuanto la varianza tiende a reducirse. En otros términos, se presume que la MAE es más eficiente que el muestreo aleatorio simple.
+
+4. ¿En qué caso el muestreo aleatorio por conglomerados tiende a aumentar la precisión de las estimaciones?
+
+Se tendrán que presentar dos condiciones, que los conglomerados sean muy heterogéneos entre sí y que los elementos de los conglomerados sean relativamente homogéneos. Puesto que si seleccionamos un número de conglomerados representativos de una muestra, y la diferencia entre estos, es probable que las estimaciones sean muy precisas.
+
+## **Parte II (5 puntos)**
+
+**1.** Descargue el Censo Nacional de Población Penitenciaria 2016 de la página del INEI (https://proyectos.inei.gob.pe/microdatos/). Puede descargar solo la carátula o también más módulos de dicho censo.
+```{r, message=FALSE}
+library(dplyr)
+library(haven)
+library(archive)
+
+setwd("C:/Users/mendo/OneDrive/Desktop/GitHub/10-Big_Data_et_Analytics/PC_2")
+
+# URL del archivo en Github
+url_1 <- "https://github.com/MendozaC25/10-Big_Data_et_Analytics/raw/refs/heads/main/PC_2/01_PENALES_CARATULA.rar"
+
+# Nombre del archivo de destino
+destfile_1 <- "01_PENALES_CARATULA.rar"
+
+# Descargar el archivo
+download.file(url_1, destfile_1, mode = "wb")
+
+# Extraer archivos
+archive_extract("01_PENALES_CARATULA.rar")
+archive_extract("01_PENALES_CAP100.rar")
+
+df <- read_sav("01_PENALES_CARATULA.sav")
+
+file.remove("01_PENALES_CARATULA.sav")
+
+n_registros <- nrow(df)
+n_registros
+```
+**2.** Genere una variable dicotómica con el valor de 1 para quienes cometen “Delitos contra la seguridad pública”, y 0 para el resto de casos. Llamar a esta variable `pp_dcsp`
+
+```{r}
+df_SP <- df |>
+  mutate(
+    pp_dcsp = ifelse(DELITO_GENERICO == "DELITOS CONTRA LA SEGURIDAD PUBLICA", 
+                     1, 
+                     0)
+  )
+
+print("pp_dcsp")
+summary(df_SP$pp_dcsp)
+
+```
+**3.** Establezca una semilla (“seed”) usando los dígitos 12345.
+
+Con el comando `set.seed()` establecemos una semilla.
+```{r}
+set.seed(12345)
+
+```
+**4.** Extraiga una muestra estratificada y por conglomerados que contenga entre el 3% y 5% de la población (toda la base). Justifique la elección de las variables para los estratos y conglomerados. Discuta también, de ser el caso, qué otras variables que podrían haberse utilizado para los estratos o conglomerados.
+
+Un estrato es una subpoblación homogénea dentro de la cual se selecciona una muestra representativa. Se utiliza cuando se busca garantizar la adecuada representación de ciertos grupos dentro de la muestra.
+
+En este caso, la variable `EDAD` se ha utilizado para crear `Edad_Estr` como variable de estratificación. Esta elección se justifica porque existen diferencias significativas entre los perfiles delictivos y las condiciones carcelarias según la edad.
+
+- La edad influye en el tipo de delitos cometidos, el comportamiento dentro de prisión y las necesidades de rehabilitación.
+- Los reclusos jóvenes (18-30 años) suelen estar más involucrados en delitos violentos o relacionados con pandillas, mientras que los de mayor edad pueden estar más asociados a delitos financieros o de corrupción.
+- Al estratificar por edad, aseguramos que los diferentes grupos etarios estén representados en la muestra de manera proporcional, evitando sesgos.
+
+Otras variables que también podrían haberse utilizado como estratos incluyen religión (`RELIGION`), estado civil (`E_CIVIL`) o género (`GENERO`), ya que pueden influir en la dinámica carcelaria y en la reinserción social de los reclusos.
+```{r, message=FALSE}
+# Estrato
+df_SP$Edad_Estr <- cut(df_SP$EDAD, breaks = c(0, 30, 45, 60, Inf), 
+                          labels = c("18-30", "31-45", "46-60", "60+"), 
+                          right = FALSE)
+
+# Opción 1: Eliminar registros con NA en `Edad_Estr`
+df_SP <- df_SP %>% filter(!is.na(Edad_Estr))
+
+summary(df_SP$Edad_Estr)
+```
+Un conglomerado es un grupo natural dentro de la población en el que se seleccionan unidades completas. Se utiliza cuando existen grandes diferencias entre los grupos, pero cada grupo interno es relativamente homogéneo.
+
+En este caso, se ha elegido `OF_REGIONAL` (la oficina regional) como variable de conglomerados, y su selección se justifica por la estructura descentralizada de la administración penitenciaria en Perú:
+
+- El sistema penitenciario está distribuido en distintas oficinas regionales, cada una encargada de gestionar las cárceles dentro de su jurisdicción.
+- Factores como las condiciones carcelarias, la sobrepoblación y los programas de rehabilitación pueden variar significativamente entre regiones.
+- Al usar `OF_REGIONAL` como conglomerado, capturamos estas diferencias estructurales sin afectar la representatividad dentro de cada región.
+
+Otras variables que también podrían haberse utilizado como conglomerados incluyen el pabellón en el que se encuentra el reo (`PABELLON`) o el nombre del establecimiento penitenciario (`EST_PENIT`), ya que ambos agrupan a los internos en unidades naturales con características específicas.
+```{r}
+summary.factor(df_SP$OF_REGIONAL)
+
+```
+Lo siguiente es la muestra que se obtiene estratificada y por conglomerado con un oporcentaje aleatorio entre 3% y 5% de la población.
+```{r}
+# Seleccionar porcentaje aleatorio entre 3% y 5%
+muestra_prop <- runif(1, 0.03, 0.05)
+
+# Muestreo estratificado y por conglomerados
+muestra_final <- df_SP |>
+  group_by(OF_REGIONAL, Edad_Estr) |>  # Estratificación por región y edad
+  slice_sample(prop = muestra_prop) |> # Selección de muestra proporcional
+  ungroup()
+
+# Verificar el tamaño de la muestra final
+nrow(muestra_final) / nrow(df_SP) * 100  # Porcentaje de la muestra
+
+```
+**5.** Declare el diseño muestral completo y calcale las siguientes estadísticas (deben ser representativas):
+```{r, message=FALSE}
+library(survey)
+
+diseno_muestral <- svydesign(
+  id = ~OF_REGIONAL,      # Conglomerado: Oficina Regional
+  strata = ~Edad_Estr,    # Estratos: Grupo de edad
+  data = df_SP,           # Base de datos muestral
+  weights = ~1,           # Peso muestral (asumimos igual probabilidad)
+  nest = TRUE             # Permite que estratos sean anidados en conglomerados
+)
+
+```
+  - a. El porcentaje de personas que cometió “Delitos contra la seguridad pública”
+
+Resultado: 25.37%
+Intervalo de error estándar: ±1.68%
+
+Se puede ver que aproximadamente 1 de cada 4 personas en la población penitenciaria ha sido encarcelada por delitos contra la seguridad pública.
+```{r}
+svymean(~pp_dcsp, diseno_muestral)
+
+```
+  - b. El total de personas que cometió “Delitos contra la seguridad pública”
+  
+Resultado: 19,315 personas
+Error estándar: 4,896 personas
+Se estima que aproximadamente 19,315 personas en la población total de internos han cometido este tipo de delito. Sin embargo, debido a la naturaleza del muestreo, esta cifra tiene una variabilidad de ±4,896, lo que significa que el total real podría estar entre 14,419 y 24,211 personas.
+```{r}
+svytotal(~pp_dcsp, diseno_muestral)
+
+```
+## **Parte III (5 puntos)**
+
+Explique el objetivo, la población objetivo, macro muestral, el diseño muestral de la encuesta y las unidades de muestreo. Luego, declare el diseño muestral (**completo**). Explique los niveles de inferencia, construcción de pesos y tasa de no respuesta. Para esto, se recomienda revisar la ficha técnica de la encuesta.
+
+**Nombre de la Encuesta: Segunda Encuesta Mundial a la Comunidad Peruana en el Exterior 2021**
+
+- **Objetivo: **
+Obtener información actualizada sobre las principales características demográficas, sociales, económicas y la situación migratoria de la Comunidad Peruana en el Exterior, así como su grado de vinculación con el Perú y la percepción acerca de los servicios ofrecidos en los diferentes consulados alrededor del mundo.
+
+- **Población objetivo:**
+Compuesta por peruanos/as que nacieron en el Perú y residen en un país distinto y/o aquellas personas nacidas en un país distinto al Perú y que tienen la nacionalidad peruana.
+
+- **Marco muestral:**
+Se basó en la información proporcionada por el Registro Nacional de Identificación y Estado Civil (RENIEC), que identificó a 1,006,576 peruanos de 18 años y más con Documento Nacional de Identidad (DNI) residiendo en el exterior.
+
+- **Diseño muestral:**
+No probabilístico por cuotas de género y grupos de edad. Se utilizó para el recojo de información el autoempadronamiento mediante formularios virtuales o impresos.
+
+- **Unidades de muestreo:**
+Los/as peruano/as mayores de 18 años residentes en el exterior identificados en el marco del RENIEC.
+
+- **Diseño muestral completo:**
+La encuesta se realizó en 63 países de Europa, Asia, África, Oceanía y América, correspondiente a 115 Consulados del Ministerio de Relaciones Exteriores del Perú. En ese sentido, se distribuyó la muestra de manera representativa por continente, país, ciudad y consulado. Adicionalmente a ello, se realizó un recálculo de las cuotas por género y grupo de edad, dado que se tuvo la dificultad de localizar a los peruanos en sus lugares de residencia. Así, se seleccionó un tamaño de muestra de 10,084 personas de un total de 12,000 peruanos registrados en la encuesta online.
+
+- **Niveles de inferencia:**
+Abarca los cinco continentes donde residen los peruanos (América, Europa, Asia, África y Oceanía) y se desglosan a nivel de país, ciudad y consulado.
+
+- **Construcción de pesos:**
+En el documento no se especifica la metodología específica de construcción de pesos.
+
+- **Tasa de no respuesta:**
+El documento no especifica una tasa de no respuesta.
+
+## **Parte IV (5 puntos)**
+
+Responder uno de los siguientes bloques de preguntas (elija entre Bloque A o Bloque B). Prestar atención al límite de palabras de cada pregunta.
+
+### **BLOQUE B**
+
+#### Pregunta 1 (Palabras: 300)
+
+Suponga que usted es ascendido como muestrista principal en el Ministerio de Salud (Minsa). Su primera tarea es terminar de definir el diseño de una encuesta probabilística para medir el nivel de desnutrición en niños de educación primaria. El anterior muestrista había sugerido un diseño por conglomerados donde los conglomerados sean los distritos.
+Discuta si esta opción le parece la más idónea. ¿Qué beneficios y/o perjuicios traería hacerlo de dicho modo? Además, si usted considera que hay otra opción, explique cuál sería y por qué. Incluya los conceptos de UPM y USC.
+Suponga, además, que su superior le dice que han aumentado el presupuesto para el estudio, por lo cual pueden incrementar el tamaño de muestra calculado por el anterior muestrista. En ese sentido, le consulta si resulta más conveniente aumentar los conglomerados o más bien el número de estudiantes dentro de cada conglomerado.
+Argumente su respuesta.
+
+Discuta las ventajas y/o desventajas del diseño planteado por al anterior muestrista (diseño por conglomerados) frente a un diseño por estratos. De optar por un diseño por estratos, cuáles serían las ventajas y desventajas frente al diseño inicialmente planteado. Incluya conceptos como homogeneidad, heterogeneidad, efecto de diseño.
+
+-**Respuesta:**
+
+El diseño por conglomerados propuesto, donde los distritos son las unidades primarias de muestreo (UPM), tiene ventajas prácticas pero también desafíos metodológicos.
+
+**Ventajas del diseño por conglomerados**
+
+1. **Practicidad logística:** Los distritos agrupan escuelas y estudiantes, facilitando la recolección de datos al reducir costos y tiempo de desplazamiento.
+2. **Adaptabilidad:** Permite seleccionar aleatoriamente escuelas dentro de los distritos seleccionados como unidades secundarias de muestreo (USC), lo que simplifica el proceso.
+
+**Desventajas del diseño por conglomerados**
+
+1. **Efecto de diseño:** Los niños dentro de un mismo distrito tienden a ser más homogéneos en características relevantes (e.g., acceso a servicios de salud, condiciones socioeconómicas), lo que reduce la eficiencia estadística en comparación con diseños más dispersos.
+2. **Menor precisión:** La homogeneidad intra-conglomerado puede requerir muestras más grandes para alcanzar el mismo nivel de precisión.
+
+**Alternativa: Diseño estratificado**
+
+Un diseño estratificado dividiría la población en estratos según criterios relevantes (e.g., región geográfica, nivel socioeconómico, tipo de escuela: rural/urbana). Dentro de cada estrato, se seleccionan muestras independientes.
+
+**Ventajas del diseño estratificado**
+
+- **Mayor precisión:** Aumenta la heterogeneidad entre estratos y homogeneidad dentro de ellos, mejorando la estimación de parámetros clave.
+- **Flexibilidad:** Permite un análisis detallado por subgrupos (e.g., rural/urbano) sin comprometer la representatividad.
+
+**Desventajas**
+
+- **Complejidad:** Es más difícil de implementar y puede ser más costoso, dependiendo de la cantidad de estratos definidos.
+- **Logística:** Aumenta la necesidad de coordinación y planificación.
+
+**Incremento de presupuesto**
+
+Si se aumenta el presupuesto, es más eficiente incrementar el número de conglomerados (distritos) en lugar de aumentar los estudiantes dentro de cada distrito. Esto mejora la precisión porque se amplía la cobertura geográfica y la heterogeneidad entre conglomerados. Incrementar el tamaño de muestra dentro de un conglomerado aumenta la redundancia debido a la homogeneidad intrínseca.
+
+**Recomendación final**
+
+Un diseño por conglomerados es viable, pero un diseño estratificado podría ofrecer ventajas significativas en precisión, especialmente con un mayor presupuesto. Si se mantiene el diseño por conglomerados, priorice aumentar el número de distritos seleccionados como UPM para optimizar la diversidad y mejorar la calidad de las estimaciones.
+
+#### Pregunta 2 (Palabras: 200)
+
+Un hacedor de políticas públicas que cuenta con conocimientos intermedios de estadística le pide que utilice la Encuesta Nacional Agropecuaria más reciente para obtener estadísticas distritales de acceso a asistencia técnica en agricultores de Cajamarca. Estos datos serán utilizados en el diseño de un programa público de apoyo a los productores.
+Explíquele al funcionario si esto es posible y por qué. En caso no sea posible, propóngale qué otra fuente de datos podría usarse y cuáles serían sus ventajas y desventajas.
+
+-**Respuesta:**
+Para responder su solicitud, es importante analizar las limitaciones y potencial de la Encuesta Nacional Agropecuaria (ENA) más reciente. La ENA generalmente es diseñada para producir estadísticas confiables a nivel nacional, regional o departamental, pero no necesariamente a nivel distrital. Si los tamaños de muestra de la ENA en los distritos de Cajamarca son insuficientes o no representativos, las estimaciones distritales pueden ser poco precisas o carecer de validez estadística. Esto ocurre porque la muestra puede no ser lo suficientemente grande para capturar las características de cada distrito de manera confiable.
+En caso de que no sea posible usar la ENA, se podrían explorar otras fuentes de datos, como censos agropecuarios o encuestas especializadas. 
+
+Por ejemplo:
+
+- Censo Nacional Agropecuario: Proporciona datos exhaustivos a nivel distrital, pero puede estar desactualizado si no se ha realizado recientemente.
+- Encuestas focalizadas o locales: Diseñar una encuesta específica para los distritos de Cajamarca permitiría recolectar información detallada. Ventajas: datos precisos y relevantes para los objetivos del programa. Desventajas: mayor costo y tiempo para su implementación.
+- Sistemas de información regionales o registros administrativos: Si existen registros locales de asistencia técnica, podrían complementar la ENA. Sin embargo, la calidad y cobertura de los datos pueden ser limitadas.
+
+Se sugiere evaluar estas alternativas considerando el tiempo, recursos y alcance del programa.
